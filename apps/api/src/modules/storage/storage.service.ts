@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   DeleteObjectCommand,
   HeadBucketCommand,
   CreateBucketCommand,
@@ -11,6 +12,9 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
+import type { Request, Response, NextFunction } from 'express';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -27,7 +31,13 @@ export class StorageService {
     private prisma: PrismaService,
   ) {
     this.bucket = config.get('S3_BUCKET', 'mdiscover-assets');
-    this.publicUrl = config.get('S3_PUBLIC_URL', `http://localhost:9000/${this.bucket}`);
+    const apiPublic = (config.get('API_PUBLIC_URL') || 'http://localhost:4000').replace(/\/$/, '');
+    const configuredPublic = (config.get('S3_PUBLIC_URL') || '').replace(/\/$/, '');
+    // MinIO is internal-only in prod — never return docker hostnames to the browser
+    const unreachable =
+      !configuredPublic ||
+      /minio|:9000|localhost:9000|127\.0\.0\.1:9000/i.test(configuredPublic);
+    this.publicUrl = unreachable ? `${apiPublic}/uploads` : configuredPublic;
     this.localDir = path.join(process.cwd(), 'uploads');
     const endpoint = config.get('S3_ENDPOINT');
     if (endpoint) {
@@ -42,6 +52,47 @@ export class StorageService {
       });
       this.bucketReady = this.ensureBucket();
     }
+  }
+
+  /** Express middleware: stream MinIO object when local file is missing. */
+  proxyUploads() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      const key = (req.path || '').replace(/^\/+/, '').split('?')[0];
+      if (!key || key.includes('..')) return next();
+
+      const localPath = path.join(this.localDir, key);
+      if (fs.existsSync(localPath)) return next(); // express.static will serve it
+
+      if (!this.client) {
+        res.status(404).end();
+        return;
+      }
+
+      try {
+        if (this.bucketReady) await this.bucketReady;
+        const out = await this.client.send(
+          new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+        );
+        if (!out.Body) {
+          res.status(404).end();
+          return;
+        }
+        res.setHeader('Content-Type', out.ContentType || 'application/octet-stream');
+        if (out.ContentLength != null) {
+          res.setHeader('Content-Length', String(out.ContentLength));
+        }
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        if (req.method === 'HEAD') {
+          res.status(200).end();
+          return;
+        }
+        await pipeline(out.Body as Readable, res);
+      } catch (err) {
+        this.logger.warn(`Upload proxy miss for ${key}: ${err}`);
+        if (!res.headersSent) res.status(404).end();
+      }
+    };
   }
 
   private async ensureBucket() {

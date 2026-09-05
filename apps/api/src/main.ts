@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { API_PREFIX } from '@mdiscovershop/shared';
+import { StorageService } from './modules/storage/storage.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const cookieParser = require('cookie-parser');
@@ -22,6 +23,8 @@ async function bootstrap() {
   );
   app.use(cookieParser());
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
+  // MinIO is not public — proxy browser requests under /uploads/* to the bucket
+  app.use('/uploads', app.get(StorageService).proxyUploads());
   app.enableCors({
     origin: [
       config.get('APP_URL', 'http://localhost:3000'),

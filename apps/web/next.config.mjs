@@ -5,6 +5,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'api.mdiscover.shop' },
+      { protocol: 'http', hostname: 'localhost', port: '4000' },
       { protocol: 'http', hostname: 'localhost', port: '9000' },
     ],
   },

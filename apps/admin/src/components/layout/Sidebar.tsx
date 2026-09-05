@@ -50,7 +50,7 @@ export function Sidebar() {
         <Link href="/" className="block" aria-label={APP_NAME}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/admin/logo.jpeg"
+            src="/admin/logo-clear.png"
             alt={APP_NAME}
             width={200}
             height={72}

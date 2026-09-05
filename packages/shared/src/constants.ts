@@ -1,5 +1,5 @@
 export const APP_NAME = 'mDISCOVER';
-export const APP_LOGO = '/logo.png';
+export const APP_LOGO = '/logo-clear.png';
 export const BRAND_ROSE = '#AC6D6F';
 
 /** Boutique contact — WhatsApp / téléphone */

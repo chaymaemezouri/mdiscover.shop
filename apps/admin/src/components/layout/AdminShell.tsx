@@ -40,7 +40,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="flex items-center gap-2 min-w-0" aria-label={APP_NAME}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/admin/logo.jpeg"
+            src="/admin/logo-clear.png"
             alt={APP_NAME}
             width={140}
             height={40}

@@ -5,7 +5,7 @@ type BrandLogoProps = {
   /** Text wordmark — avoids legacy logo.png showing "DISCOVER" without m */
   wordmark?: boolean;
   wordmarkClassName?: string;
-  /** JPEG asset for light backgrounds (footer, etc.) */
+  /** Kept for API compatibility; logo is always transparent PNG now */
   lightBackground?: boolean;
 };
 
@@ -13,7 +13,6 @@ export function BrandLogo({
   className = 'h-10 md:h-12 w-auto object-contain',
   wordmark = false,
   wordmarkClassName = 'text-[15px] sm:text-[16px] tracking-[0.26em] text-[#FFFDFC]/94 font-sans',
-  lightBackground = false,
 }: BrandLogoProps) {
   if (wordmark) {
     return (
@@ -27,7 +26,7 @@ export function BrandLogo({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={lightBackground ? '/logo.jpeg' : '/logo.png'}
+      src="/logo-clear.png"
       alt={APP_NAME}
       width={260}
       height={72}

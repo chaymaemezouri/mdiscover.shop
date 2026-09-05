@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { DM_Serif_Display, Manrope } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
@@ -33,6 +33,13 @@ export const metadata: Metadata = {
   description:
     `${APP_NAME} — premium luxury skincare. Advanced formulas enriched with precious ingredients for radiant, timeless beauty.`,
   keywords: [APP_NAME, 'skincare', 'luxury', 'cosmetics', 'serum', 'Morocco'],
+};
+
+/** Prevent accidental mobile zoom jumps; keep pinch zoom for accessibility. */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

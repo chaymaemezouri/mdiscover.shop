@@ -85,11 +85,7 @@ export function GoogleSignInButton({ onSuccess, disabled }: Props) {
   }, [clientId, onSuccess]);
 
   if (!clientId) {
-    return (
-      <p className="rounded-xl border border-[#E8D4D5] bg-[#FFF9F5] px-4 py-3 text-center text-[11px] text-charcoal-500 font-sans">
-        Google sign-in is not configured yet.
-      </p>
-    );
+    return null;
   }
 
   return (

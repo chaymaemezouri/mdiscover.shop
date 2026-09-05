@@ -15,8 +15,7 @@ const DEMO_ACCOUNT = {
   password: 'Client123!',
 } as const;
 
-const SHOW_DEMO_LOGIN =
-  process.env.NEXT_PUBLIC_SHOW_DEMO_LOGIN !== 'false';
+const SHOW_DEMO_LOGIN = process.env.NEXT_PUBLIC_SHOW_DEMO_LOGIN === 'true';
 
 interface AccountAuthPanelProps {
   initialEmail?: string;

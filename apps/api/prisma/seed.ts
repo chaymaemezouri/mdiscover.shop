@@ -7,10 +7,17 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  const adminPassword = await bcrypt.hash('Admin123!', 12);
+  const adminPasswordPlain = process.env.ADMIN_SEED_PASSWORD ?? 'mDscvr#9K!pL2$xR7wQ@n';
+  const adminPassword = await bcrypt.hash(adminPasswordPlain, 12);
   await prisma.adminUser.upsert({
     where: { email: 'admin@mdiscover.ma' },
-    update: {},
+    update: {
+      passwordHash: adminPassword,
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: 'SUPER_ADMIN',
+      status: 'ACTIVE',
+    },
     create: {
       email: 'admin@mdiscover.ma',
       passwordHash: adminPassword,
@@ -299,7 +306,7 @@ async function main() {
   });
 
   console.log('✅ Seed completed!');
-  console.log('   Admin: admin@mdiscover.ma / Admin123!');
+  console.log(`   Admin: admin@mdiscover.ma / ${adminPasswordPlain}`);
   console.log('   Client: client@example.com / Client123!');
 
   await prisma.siteSetting.createMany({

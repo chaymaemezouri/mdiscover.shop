@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { APP_NAME } from '@mdiscovershop/shared';
 
 const ADMIN_API_URL =
   process.env.NEXT_PUBLIC_ADMIN_API_URL ?? 'http://localhost:4000/api/v1';
@@ -35,6 +36,7 @@ export default function AdminLoginPage() {
       }
       const data = await res.json();
       localStorage.setItem('admin_token', data.accessToken);
+      if (data.refreshToken) localStorage.setItem('admin_refresh_token', data.refreshToken);
       router.push('/');
     } catch {
       setError('Email ou mot de passe incorrect');
@@ -50,7 +52,7 @@ export default function AdminLoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/admin/logo.jpeg"
-            alt="mDISCOVER"
+            alt={APP_NAME}
             width={200}
             height={72}
             className="h-10 w-auto object-contain"
@@ -64,6 +66,7 @@ export default function AdminLoginPage() {
             <input
               type="email"
               required
+              autoComplete="username"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="admin-input"
@@ -75,6 +78,7 @@ export default function AdminLoginPage() {
             <input
               type="password"
               required
+              autoComplete="current-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               className="admin-input"
@@ -97,12 +101,6 @@ export default function AdminLoginPage() {
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
-
-        <p className="text-[11px] text-[var(--admin-muted)] text-center mt-5 leading-relaxed">
-          Ou via le site → Compte
-          <br />
-          admin@mdiscover.ma / Admin123!
-        </p>
       </div>
     </div>
   );

@@ -83,12 +83,15 @@ services:
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
         NEXT_PUBLIC_SHOW_DEMO_LOGIN: ${NEXT_PUBLIC_SHOW_DEMO_LOGIN:-false}
         ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://kamira-admin-prod:3001}
+        MEDIA_PROXY_ORIGIN: ${MEDIA_PROXY_ORIGIN:-http://kamira-api-prod:4000}
     container_name: kamira-web-prod
     restart: unless-stopped
     ports:
       - '3010:3000'
     environment:
       ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://kamira-admin-prod:3001}
+      MEDIA_PROXY_ORIGIN: ${MEDIA_PROXY_ORIGIN:-http://kamira-api-prod:4000}
+      API_INTERNAL_URL: ${MEDIA_PROXY_ORIGIN:-http://kamira-api-prod:4000}
     depends_on:
       - api
       - admin

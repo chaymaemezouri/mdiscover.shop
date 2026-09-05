@@ -9,7 +9,7 @@ interface Props {
   name: string;
 }
 
-export function ProductCardShopImage({ src, alt, name }: Props) {
+export function ProductCardShopImage({ src, alt }: Props) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {

@@ -24,7 +24,6 @@ export function AccountConnectModal() {
   const mode = useAccountModal((s) => s.mode);
   const close = useAccountModal((s) => s.close);
   const setMode = useAccountModal((s) => s.setMode);
-  const router = useRouter();
 
   useEffect(() => {
     if (!isOpen) return;

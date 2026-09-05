@@ -136,13 +136,38 @@ function fallbackCarouselItems(): CarouselCategory[] {
   }));
 }
 
+/** Prefer relative paths so Next.js can resize/compress images. */
+function toCarouselImageSrc(raw: string): string {
+  const src = raw.trim();
+  if (!src) return src;
+  if (src.startsWith('/')) return src;
+  try {
+    const u = new URL(src);
+    if (
+      u.pathname.startsWith('/categories/') &&
+      (u.hostname === 'mdiscover.shop' ||
+        u.hostname === 'www.mdiscover.shop' ||
+        u.hostname === 'localhost' ||
+        u.hostname.endsWith('.local'))
+    ) {
+      return u.pathname;
+    }
+  } catch {
+    /* keep raw */
+  }
+  return src;
+}
+
 function resolvePresentation(item: CarouselCategory, index: number): CategoryPresentation {
   const preset = CATEGORY_PRESENTATION[item.slug];
   const base = preset ?? DEFAULT_PRESENTATION;
+  // Prefer local preset file when available (fast + optimizable by Next)
+  const fromApi = item.imageUrl?.trim();
+  const chosen = preset?.image || (fromApi ? toCarouselImageSrc(fromApi) : base.image);
   return {
     tag: preset?.tag ?? 'Collection',
     description: item.description?.trim() || base.description,
-    image: item.imageUrl?.trim() || base.image,
+    image: chosen,
     imagePosition: preset?.imagePosition ?? '50% 50%',
     tint: preset?.tint ?? TINT_CYCLE[index % TINT_CYCLE.length],
   };
@@ -569,6 +594,8 @@ export function CategoryCarousel({ categories = [] }: { categories?: Category[] 
                         alt={category.name}
                         fill
                         sizes="(max-width: 640px) 78vw, 240px"
+                        quality={72}
+                        priority={isActive}
                         className={`category-arc-visual-img object-cover ${isActive ? 'category-arc-visual-img--active' : ''}`}
                         style={{ objectPosition: meta.imagePosition ?? '50% 50%' }}
                         draggable={false}

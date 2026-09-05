@@ -82,8 +82,6 @@ services:
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
         NEXT_PUBLIC_SHOW_DEMO_LOGIN: ${NEXT_PUBLIC_SHOW_DEMO_LOGIN:-false}
         ADMIN_ORIGIN: ${ADMIN_ORIGIN:-http://kamira-admin-prod:3001}
-        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
-        NEXT_PUBLIC_SHOW_DEMO_LOGIN: ${NEXT_PUBLIC_SHOW_DEMO_LOGIN:-false}
     container_name: kamira-web-prod
     restart: unless-stopped
     ports:

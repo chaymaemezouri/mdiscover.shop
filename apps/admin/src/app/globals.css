@@ -14,11 +14,32 @@
     --admin-line: #e8e0dc;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-[var(--admin-bg)] text-[var(--admin-black)] antialiased;
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 1.5;
+    overflow-x: clip;
+    max-width: 100vw;
+  }
+
+  /*
+   * iOS Safari zooms when focusing inputs under 16px (admin-input is text-sm = 14px).
+   */
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select,
+    .admin-input {
+      font-size: 16px !important;
+    }
   }
 
   h1,

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { ShoppingBag, Menu, X, Heart, Search, User } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { BrandLogo } from '@/components/layout/BrandLogo';
@@ -37,7 +37,7 @@ function hasNavHref(
   return 'href' in link;
 }
 
-export function HeroNavBar({ variant = 'page' }: HeroNavBarProps) {
+function HeroNavBarInner({ variant = 'page' }: HeroNavBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileQuery, setMobileQuery] = useState('');
   const itemCount = useCartStore((s) => s.itemCount);
@@ -127,7 +127,6 @@ export function HeroNavBar({ variant = 'page' }: HeroNavBarProps) {
         </nav>
 
         <div className="relative z-10 ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5 md:gap-2">
-          {/* Search lives in the mobile menu below lg to avoid crowding the icon row */}
           <div className="hidden lg:block">
             <SearchBar variant="popover" tone={variant === 'hero' ? 'hero' : 'page'} />
           </div>
@@ -139,7 +138,11 @@ export function HeroNavBar({ variant = 'page' }: HeroNavBarProps) {
           >
             <Heart size={NAV_ICON.size} strokeWidth={NAV_ICON.strokeWidth} />
             {wishlistCount > 0 && (
-              <span className={`hero-cart-badge absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 bg-[#FFF9F5] text-[#182B38] text-[9px] rounded-full flex items-center justify-center font-medium leading-none ring-1 ring-[#A96868]/25 ${wishlistBadgePulse ? 'animate-cart-badge-pop' : ''}`}>
+              <span
+                className={`hero-cart-badge absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 bg-[#FFF9F5] text-[#182B38] text-[9px] rounded-full flex items-center justify-center font-medium leading-none ring-1 ring-[#A96868]/25 ${
+                  wishlistBadgePulse ? 'animate-cart-badge-pop' : ''
+                }`}
+              >
                 {wishlistCount > 99 ? '99+' : wishlistCount}
               </span>
             )}
@@ -148,8 +151,12 @@ export function HeroNavBar({ variant = 'page' }: HeroNavBarProps) {
           <Link href="/panier" aria-label={t('nav.cart')} className={`${iconBtn} relative`}>
             <ShoppingBag size={NAV_ICON.size} strokeWidth={NAV_ICON.strokeWidth} />
             {itemCount > 0 && (
-              <span className={`hero-cart-badge absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 bg-[#FFF9F5] text-[#182B38] text-[9px] rounded-full flex items-center justify-center font-medium leading-none ring-1 ring-[#A96868]/25 ${cartBadgePulse ? 'animate-cart-badge-pop' : ''}`}>
-                {itemCount}
+              <span
+                className={`hero-cart-badge absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 bg-[#FFF9F5] text-[#182B38] text-[9px] rounded-full flex items-center justify-center font-medium leading-none ring-1 ring-[#A96868]/25 ${
+                  cartBadgePulse ? 'animate-cart-badge-pop' : ''
+                }`}
+              >
+                {itemCount > 99 ? '99+' : itemCount}
               </span>
             )}
           </Link>
@@ -253,5 +260,14 @@ export function HeroNavBar({ variant = 'page' }: HeroNavBarProps) {
         </nav>
       )}
     </div>
+  );
+}
+
+/** Suspense required: useSearchParams in global header would break static prerender. */
+export function HeroNavBar(props: HeroNavBarProps) {
+  return (
+    <Suspense fallback={null}>
+      <HeroNavBarInner {...props} />
+    </Suspense>
   );
 }

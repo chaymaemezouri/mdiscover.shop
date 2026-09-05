@@ -3,8 +3,12 @@ WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ARG NEXT_PUBLIC_WHATSAPP_NUMBER=212661528608
+ARG ADMIN_ORIGIN=http://kamira-admin-prod:3001
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_WHATSAPP_NUMBER=$NEXT_PUBLIC_WHATSAPP_NUMBER
+ENV ADMIN_ORIGIN=$ADMIN_ORIGIN
 
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
@@ -23,12 +27,13 @@ ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/apps/web/public ./apps/web/public
+# Next.js standalone output places server.js at the root of the standalone folder
+COPY --from=builder /app/apps/web/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-CMD ["node", "apps/web/server.js"]
+CMD ["node", "server.js"]

@@ -139,7 +139,7 @@ export function ProductFilters({ categories, brands = [] }: Props) {
     })) satisfies Category[];
   }, [categories]);
 
-  const brandList = useMemo(() => {
+  const brandList = useMemo<Brand[]>(() => {
     if (brands.length > 0) return brands;
     return PRODUCT_BRANDS.map((b) => ({
       id: b.slug,

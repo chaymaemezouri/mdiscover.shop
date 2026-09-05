@@ -18,11 +18,17 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+RUN apk add --no-cache openssl libssl3
+
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
 
-RUN npm ci --omit=dev --ignore-scripts -w @mdiscovershop/api -w @mdiscovershop/shared
+# bcrypt needs native compile; install build deps temporarily, then rebuild bcrypt
+RUN apk add --no-cache --virtual .build-deps python3 make g++ \
+ && npm ci --omit=dev -w @mdiscovershop/api -w @mdiscovershop/shared \
+ && npm rebuild bcrypt --build-from-source -w @mdiscovershop/api \
+ && apk del .build-deps
 
 COPY --from=builder /app/packages/shared/dist packages/shared/dist
 COPY --from=builder /app/apps/api/dist apps/api/dist

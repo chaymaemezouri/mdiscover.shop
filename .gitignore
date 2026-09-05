@@ -14,7 +14,9 @@ out/
 .env
 .env.local
 .env.*.local
+docker/.env
 !.env.example
+!docker/.env.example
 
 # Logs
 logs/

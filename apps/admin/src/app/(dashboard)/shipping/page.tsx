@@ -12,7 +12,7 @@ export default function ShippingHubPage() {
     Promise.all([
       adminApi<unknown[]>('/admin/shipping/zones').catch(() => []),
       adminApi<{ meta?: { total?: number }; data?: unknown[] }>('/admin/products?page=1&limit=1').catch(
-        () => ({ meta: { total: 0 } }),
+        () => ({ meta: { total: 0 }, data: [] as unknown[] }),
       ),
     ]).then(([zones, products]) => {
       setCounts({

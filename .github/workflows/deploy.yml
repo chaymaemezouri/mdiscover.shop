@@ -1,0 +1,99 @@
+# Deploy mdiscover.shop (Kamira) to OVH VPS via SSH + Docker Compose
+# Secrets required in GitHub repo Settings → Secrets and variables → Actions:
+#   VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_DEPLOY_PATH
+# Optional: SLACK_WEBHOOK / etc.
+#
+# On the VPS, docker/.env must already exist (never committed).
+# Containers use names kamira-*-prod — does not touch other Docker projects.
+
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to OVH VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Sync code to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            --exclude 'dist' \
+            --exclude 'docker/.env' \
+            --exclude 'apps/api/.env' \
+            --exclude 'apps/web/.env.local' \
+            --exclude 'apps/admin/.env.local' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            ./ "${VPS_USER}@${VPS_HOST}:${VPS_DEPLOY_PATH}/"
+
+      - name: Build & restart kamira containers
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "${VPS_USER}@${VPS_HOST}" bash -s <<EOF
+          set -euo pipefail
+          cd "${VPS_DEPLOY_PATH}"
+
+          if [ ! -f docker/.env ]; then
+            echo "ERROR: docker/.env missing on VPS — aborting (secrets not in git)."
+            exit 1
+          fi
+
+          # Build and recreate only this project's compose services
+          docker compose -f docker/docker-compose.prod.yml --env-file docker/.env build --pull
+          docker compose -f docker/docker-compose.prod.yml --env-file docker/.env up -d --remove-orphans
+
+          # prisma migrate deploy runs inside kamira-api-prod CMD on start
+          # NEVER run db seed here
+
+          echo "Waiting for API health..."
+          for i in \$(seq 1 30); do
+            if docker exec kamira-api-prod wget -qO- http://127.0.0.1:4000/api/v1/health >/dev/null 2>&1 \\
+              || docker exec kamira-api-prod node -e "require('http').get('http://127.0.0.1:4000/api/v1/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"; then
+              echo "API healthy"
+              break
+            fi
+            if [ "\$i" -eq 30 ]; then
+              echo "API health check failed"
+              docker logs kamira-api-prod --tail 80 || true
+              exit 1
+            fi
+            sleep 2
+          done
+
+          docker ps --filter name=kamira- --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+          EOF
+
+      - name: Summary
+        run: echo "Deploy finished — kamira-* containers only; seed was NOT run."

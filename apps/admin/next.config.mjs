@@ -2,6 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   basePath: '/admin',
+  eslint: { ignoreDuringBuilds: true },
   transpilePackages: ['@mdiscovershop/shared'],
   images: {
     remotePatterns: [

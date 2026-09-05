@@ -41,7 +41,25 @@ async function main() {
   });
 
   let sortOrder = 0;
+  const appUrl = (process.env.APP_URL || 'https://mdiscover.shop').replace(/\/$/, '');
+  const categoryImages: Record<string, string> = {
+    serums: 'serums.jpeg',
+    'face-cream': 'face-cream.jpeg',
+    'eye-cream': 'eye-cream.jpeg',
+    cleanser: 'cleanser.jpeg',
+    'hair-care': 'hair-care.jpeg',
+    shampoo: 'shampoo.jpeg',
+    conditioner: 'conditioner.jpeg',
+    toner: 'toner.jpeg',
+    'sun-block': 'sun-block.jpeg',
+    pdrn: 'pdrn.jpeg',
+    'product-sets': 'product-sets.jpeg',
+    parfums: 'parfums.jpeg',
+  };
+
   for (const cat of PRODUCT_CATEGORIES.filter((c) => !c.parentSlug)) {
+    const file = categoryImages[cat.slug];
+    const imageUrl = file ? `${appUrl}/categories/${file}` : null;
     await prisma.category.upsert({
       where: { slug: cat.slug },
       update: {
@@ -50,6 +68,7 @@ async function main() {
         nameEn: cat.nameEn,
         sortOrder,
         parentId: null,
+        ...(imageUrl ? { imageUrl } : {}),
       },
       create: {
         slug: cat.slug,
@@ -57,6 +76,7 @@ async function main() {
         nameAr: cat.nameAr,
         nameEn: cat.nameEn,
         sortOrder,
+        imageUrl,
       },
     });
     sortOrder += 1;

@@ -22,6 +22,13 @@
 #   UPDATE media_assets SET url = REPLACE(url, 'http://minio:9000/kamira-assets', 'https://api.mdiscover.shop/uploads');
 #   (same REPLACE on product_images.url / categories.image_url if needed)
 #
+# Seed carousel categories (safe — no products / no password reset):
+#   docker exec -w /app kamira-api-prod node -e '...'  (or after pull: ts-node prisma/seed-categories.ts)
+# Prefer: copy seed-categories into image via deploy, then:
+#   docker exec -e APP_URL=https://mdiscover.shop -w /app/apps/api kamira-api-prod \
+#     npx --yes ts-node --compiler-options '{"module":"commonjs"}' prisma/seed-categories.ts
+# If ts-node fails (no typescript in prod image), use the node one-liner in chat / PROD notes.
+#
 # Key Dockerfile fixes:
 # - API: openssl + bcrypt rebuild from source on Alpine
 # - Prisma binaryTargets: native + linux-musl-openssl-3.0.x

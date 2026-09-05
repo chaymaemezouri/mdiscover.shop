@@ -234,10 +234,9 @@ export function ProductForm({ mode, productId, initial }: Props) {
       const fileList = Array.from(files);
       const startIndex = form.images.length;
       const added: ProductImageForm[] = [];
-      for (const [offset, file] of fileList.entries()) {
+      for (const [, file] of fileList.entries()) {
         const res = await adminUpload(file);
-        const preset = SKIN_COLOR_PRESETS[(startIndex + offset) % SKIN_COLOR_PRESETS.length];
-        added.push({ url: res.url, colorHex: preset.hex, colorName: preset.name });
+        added.push({ url: res.url, colorHex: '', colorName: '' });
       }
       setForm((f) => ({ ...f, images: [...f.images, ...added] }));
       setActiveImageIndex(startIndex);
@@ -246,12 +245,6 @@ export function ProductForm({ mode, productId, initial }: Props) {
     } finally {
       setUploading(false);
     }
-  }
-
-  function ensureImageColor(img: ProductImageForm, index: number): ProductImageForm {
-    if (img.colorHex) return img;
-    const preset = SKIN_COLOR_PRESETS[index % SKIN_COLOR_PRESETS.length];
-    return { ...img, colorHex: preset.hex, colorName: img.colorName || preset.name };
   }
 
   async function handleSave(e?: React.FormEvent) {
@@ -285,14 +278,11 @@ export function ProductForm({ mode, productId, initial }: Props) {
         skinTypes: form.skinTypes,
         seoTitle: form.seoTitle || undefined,
         seoDescription: form.seoDescription || undefined,
-        images: form.images.map((img, i) => {
-          const withColor = ensureImageColor(img, i);
-          return {
-            url: withColor.url,
-            colorHex: withColor.colorHex || undefined,
-            colorName: withColor.colorName || undefined,
-          };
-        }),
+        images: form.images.map((img) => ({
+          url: img.url,
+          colorHex: img.colorHex?.trim() || undefined,
+          colorName: img.colorName?.trim() || undefined,
+        })),
         variants: form.variants.map((v, i) => ({
           ...v,
           sku: v.sku || `SKU-${Date.now()}-${i}`,
@@ -624,7 +614,7 @@ export function ProductForm({ mode, productId, initial }: Props) {
           <div>
             <h2 className="text-sm font-semibold">Photos & teintes</h2>
             <p className="text-xs text-[var(--admin-muted)] mt-0.5">
-              Clique une couleur pour changer l’image — clique une vignette pour activer sa teinte.
+              Ajoute des photos librement. La teinte est optionnelle (utile pour les nuances).
               Première image = principale boutique.
             </p>
           </div>
@@ -634,7 +624,7 @@ export function ProductForm({ mode, productId, initial }: Props) {
             <span className="text-sm font-medium">
               {uploading ? 'Upload en cours…' : 'Déposer ou choisir des images'}
             </span>
-            <span className="text-xs text-[var(--admin-muted)]">Une teinte est assignée automatiquement à chaque photo</span>
+            <span className="text-xs text-[var(--admin-muted)]">Teinte optionnelle — tu peux laisser sans couleur</span>
             <input
               type="file"
               accept="image/*"
@@ -665,52 +655,46 @@ export function ProductForm({ mode, productId, initial }: Props) {
                   )}
                   {(previewImage.colorHex || previewImage.colorName) && (
                     <span className="text-[10px] font-medium bg-black/70 text-white px-2 py-0.5 rounded flex items-center gap-1.5">
-                      <span
-                        className="w-3 h-3 rounded-full border border-white/80"
-                        style={{
-                          backgroundColor:
-                            previewImage.colorHex ||
-                            SKIN_COLOR_PRESETS[safeImageIndex % SKIN_COLOR_PRESETS.length].hex,
-                        }}
-                      />
+                      {previewImage.colorHex ? (
+                        <span
+                          className="w-3 h-3 rounded-full border border-white/80"
+                          style={{ backgroundColor: previewImage.colorHex }}
+                        />
+                      ) : null}
                       {previewImage.colorName || previewImage.colorHex}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* All colors on main image */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-[var(--admin-muted)] mr-1">Teintes :</span>
-                {form.images.map((img, i) => {
-                  const color =
-                    img.colorHex || SKIN_COLOR_PRESETS[i % SKIN_COLOR_PRESETS.length].hex;
-                  const name =
-                    img.colorName || SKIN_COLOR_PRESETS[i % SKIN_COLOR_PRESETS.length].name;
-                  const active = i === safeImageIndex;
-                  return (
-                    <button
-                      key={`swatch-${img.url}-${i}`}
-                      type="button"
-                      title={name}
-                      onClick={() => setActiveImageIndex(i)}
-                      className={`w-8 h-8 rounded-full border-2 transition-shadow ${
-                        active
-                          ? 'border-[var(--admin-black)] ring-2 ring-[var(--admin-rose)] ring-offset-1'
-                          : 'border-white shadow'
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  );
-                })}
-              </div>
+              {/* Teintes — only images that have a color */}
+              {form.images.some((img) => img.colorHex) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-[var(--admin-muted)] mr-1">Teintes :</span>
+                  {form.images.map((img, i) => {
+                    if (!img.colorHex) return null;
+                    const active = i === safeImageIndex;
+                    return (
+                      <button
+                        key={`swatch-${img.url}-${i}`}
+                        type="button"
+                        title={img.colorName || img.colorHex}
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`w-8 h-8 rounded-full border-2 transition-shadow ${
+                          active
+                            ? 'border-[var(--admin-black)] ring-2 ring-[var(--admin-rose)] ring-offset-1'
+                            : 'border-white shadow'
+                        }`}
+                        style={{ backgroundColor: img.colorHex }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-              {/* Thumbnails — click changes image + color */}
+              {/* Thumbnails */}
               <div className="flex flex-wrap gap-2">
-                {form.images.map((img, i) => {
-                  const color =
-                    img.colorHex || SKIN_COLOR_PRESETS[i % SKIN_COLOR_PRESETS.length].hex;
-                  return (
+                {form.images.map((img, i) => (
                     <button
                       key={`thumb-${img.url}-${i}`}
                       type="button"
@@ -723,13 +707,14 @@ export function ProductForm({ mode, productId, initial }: Props) {
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={img.url} alt="" className="w-full h-full object-cover" />
-                      <span
-                        className="absolute bottom-1 left-1 w-3.5 h-3.5 rounded-full border border-white shadow"
-                        style={{ backgroundColor: color }}
-                      />
+                      {img.colorHex ? (
+                        <span
+                          className="absolute bottom-1 left-1 w-3.5 h-3.5 rounded-full border border-white shadow"
+                          style={{ backgroundColor: img.colorHex }}
+                        />
+                      ) : null}
                     </button>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           ) : (
@@ -742,8 +727,7 @@ export function ProductForm({ mode, productId, initial }: Props) {
           {form.images.length > 0 && (
             <ul className="space-y-2">
               {form.images.map((img, i) => {
-                const color =
-                  img.colorHex || SKIN_COLOR_PRESETS[i % SKIN_COLOR_PRESETS.length].hex;
+                const hasColor = Boolean(img.colorHex?.trim());
                 return (
                   <li
                     key={`${img.url}-${i}`}
@@ -757,10 +741,12 @@ export function ProductForm({ mode, productId, initial }: Props) {
                     <div className="relative w-14 h-14 shrink-0 rounded overflow-hidden border border-[var(--admin-line)]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={img.url} alt="" className="w-full h-full object-cover" />
-                      <span
-                        className="absolute bottom-0.5 left-0.5 w-3 h-3 rounded-full border border-white"
-                        style={{ backgroundColor: color }}
-                      />
+                      {hasColor ? (
+                        <span
+                          className="absolute bottom-0.5 left-0.5 w-3 h-3 rounded-full border border-white"
+                          style={{ backgroundColor: img.colorHex }}
+                        />
+                      ) : null}
                     </div>
                     <div
                       className="flex-1 min-w-0 space-y-1.5"
@@ -769,25 +755,38 @@ export function ProductForm({ mode, productId, initial }: Props) {
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
-                          value={color}
+                          value={hasColor ? img.colorHex : '#F6E6D8'}
                           onChange={(e) => {
                             updateImage(i, { colorHex: e.target.value });
                             setActiveImageIndex(i);
                           }}
                           className="w-7 h-7 rounded border border-[var(--admin-line)] cursor-pointer bg-transparent p-0 shrink-0"
-                          title="Teinte"
+                          title="Teinte (optionnel)"
                         />
                         <input
                           className="admin-input text-xs py-1.5"
-                          placeholder="Nom teinte"
+                          placeholder="Nom teinte (optionnel)"
                           value={img.colorName}
                           onChange={(e) => {
                             updateImage(i, { colorName: e.target.value });
                             setActiveImageIndex(i);
                           }}
                         />
+                        {hasColor || img.colorName ? (
+                          <button
+                            type="button"
+                            className="text-[10px] text-[var(--admin-muted)] hover:text-[var(--admin-rose)] shrink-0 underline"
+                            onClick={() => {
+                              updateImage(i, { colorHex: '', colorName: '' });
+                              setActiveImageIndex(i);
+                            }}
+                          >
+                            Aucune
+                          </button>
+                        ) : null}
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-[10px] text-[var(--admin-muted)] mr-1">Optionnel :</span>
                         {SKIN_COLOR_PRESETS.map((preset) => (
                           <button
                             key={preset.hex}
@@ -798,7 +797,7 @@ export function ProductForm({ mode, productId, initial }: Props) {
                               setActiveImageIndex(i);
                             }}
                             className={`w-4 h-4 rounded-full border ${
-                              color.toLowerCase() === preset.hex.toLowerCase()
+                              hasColor && img.colorHex.toLowerCase() === preset.hex.toLowerCase()
                                 ? 'border-[var(--admin-black)] ring-1 ring-[var(--admin-black)]'
                                 : 'border-black/15'
                             }`}

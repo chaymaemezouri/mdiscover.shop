@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kamira
+          POSTGRES_PASSWORD: kamira_secret
+          POSTGRES_DB: kamira_cosmetics
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kamira -d kamira_cosmetics"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://kamira:kamira_secret@localhost:5432/kamira_cosmetics?schema=public
+      JWT_SECRET: ci-test-secret-key-minimum-32-chars
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Push database schema
+        run: npm run prisma:generate -w @mdiscovershop/api && npx prisma db push --schema=apps/api/prisma/schema.prisma --skip-generate
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Lint web
+        run: npm run lint -w @mdiscovershop/web
+
+      - name: Lint admin
+        run: npm run lint -w @mdiscovershop/admin

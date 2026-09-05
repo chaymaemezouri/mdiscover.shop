@@ -1,0 +1,32 @@
+{
+  "name": "mdiscovershop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plateforme E-commerce — mDISCOVER",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web,admin -c blue,green,magenta \"npm run start:dev -w @mdiscovershop/api\" \"npm run dev -w @mdiscovershop/web\" \"npm run dev -w @mdiscovershop/admin\"",
+    "dev:watch": "concurrently -n api-tsc,api,web,admin -c blue,cyan,green,magenta \"npm run dev -w @mdiscovershop/api\" \"npx nodemon --watch apps/api/dist --delay 1 --exec node apps/api/dist/main.js\" \"npm run dev -w @mdiscovershop/web\" \"npm run dev -w @mdiscovershop/admin\"",
+    "dev:api": "npm run dev -w @mdiscovershop/api",
+    "dev:web": "npm run dev -w @mdiscovershop/web",
+    "dev:admin": "npm run dev -w @mdiscovershop/admin",
+    "build": "npm run build -w @mdiscovershop/shared && npm run build -w @mdiscovershop/api && npm run build -w @mdiscovershop/web && npm run build -w @mdiscovershop/admin",
+    "db:generate": "npm run prisma:generate -w @mdiscovershop/api",
+    "db:migrate": "npm run prisma:migrate -w @mdiscovershop/api",
+    "db:seed": "npm run prisma:seed -w @mdiscovershop/api",
+    "db:studio": "npm run prisma:studio -w @mdiscovershop/api",
+    "docker:dev": "docker compose -f docker/docker-compose.dev.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.dev.yml down",
+    "docker:prod": "docker compose -f docker/docker-compose.prod.yml up -d --build",
+    "docker:prod:down": "docker compose -f docker/docker-compose.prod.yml down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

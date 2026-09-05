@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --admin-bg: #f7f5f3;
+    --admin-surface: #ffffff;
+    --admin-black: #111111;
+    --admin-muted: #6b6b6b;
+    --admin-rose: #a96868;
+    --admin-rose-dark: #8f5555;
+    --admin-rose-soft: #a968681a;
+    --admin-line: #e8e0dc;
+  }
+
+  body {
+    @apply bg-[var(--admin-bg)] text-[var(--admin-black)] antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .admin-card {
+    @apply bg-white border border-[var(--admin-line)] rounded-lg p-4 sm:p-5;
+  }
+
+  .admin-stat {
+    @apply admin-card flex flex-col gap-1 min-w-0 overflow-hidden;
+  }
+
+  .admin-table-wrap {
+    @apply -mx-1 overflow-x-auto;
+  }
+
+  .admin-table {
+    @apply min-w-[560px] w-full;
+  }
+
+  .admin-btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-[var(--admin-rose)] text-white text-sm font-medium rounded-md hover:bg-[var(--admin-rose-dark)] transition-colors disabled:opacity-50;
+  }
+
+  .admin-btn-black {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-[var(--admin-black)] text-white text-sm font-medium rounded-md hover:bg-black/80 transition-colors disabled:opacity-50;
+  }
+
+  .admin-btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 border border-[var(--admin-line)] bg-white text-[var(--admin-black)] text-sm font-medium rounded-md hover:border-[var(--admin-rose)] hover:text-[var(--admin-rose)] transition-colors;
+  }
+
+  .admin-btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm text-[var(--admin-muted)] hover:text-[var(--admin-black)] hover:bg-black/[0.04] rounded-md transition-colors;
+  }
+
+  .admin-input {
+    @apply w-full border border-[var(--admin-line)] bg-white rounded-md px-3 py-2 text-sm text-[var(--admin-black)] placeholder:text-[#a3a3a3] focus:outline-none focus:border-[var(--admin-rose)] focus:ring-1 focus:ring-[var(--admin-rose)];
+  }
+
+  .admin-label {
+    @apply block text-xs font-medium text-[var(--admin-muted)] mb-1.5;
+  }
+
+  .admin-table th {
+    @apply pb-3 text-left text-xs font-medium uppercase tracking-wide text-[var(--admin-muted)] whitespace-nowrap;
+  }
+
+  .admin-table td {
+    @apply py-3 align-middle border-t border-[var(--admin-line)] whitespace-nowrap;
+  }
+
+  .admin-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium;
+  }
+
+  .admin-badge-rose {
+    @apply admin-badge text-[var(--admin-rose)];
+    background-color: var(--admin-rose-soft);
+  }
+
+  .admin-badge-black {
+    @apply admin-badge text-[var(--admin-black)];
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .admin-badge-ok {
+    @apply admin-badge bg-emerald-50 text-emerald-700;
+  }
+
+  .admin-modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4;
+  }
+
+  .admin-modal {
+    @apply w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white border border-[var(--admin-line)] p-6 shadow-xl;
+  }
+}

@@ -280,14 +280,6 @@ export default function CartPage() {
               </button>
             )}
 
-            <button
-              type="button"
-              disabled
-              className="mt-3 flex min-h-[48px] w-full items-center justify-center rounded-full border border-[#E8D4D5] bg-white text-sm font-semibold text-[#B77D7E] font-sans opacity-80 cursor-not-allowed"
-            >
-              {t('cart.paypal')}
-            </button>
-
             <div className="mt-8 space-y-2 border-t border-[#E8D4D5]/80 pt-6 text-[11px] text-charcoal-500 font-sans">
               <div className="flex justify-between">
                 <span>{t('cart.subtotal')}</span>

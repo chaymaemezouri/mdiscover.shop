@@ -11,7 +11,7 @@ async function getPosts() {
 }
 
 export default async function BlogPage() {
-  const { data: posts } = await getPosts();
+  const { data: posts = [] } = (await getPosts()) ?? { data: [] };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
